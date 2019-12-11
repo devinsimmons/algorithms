@@ -28,6 +28,9 @@ class Percolation:
         self.grid_id += [i for i in range(self.num_rows + 1, (n + 1) - self.num_rows)]
         self.grid_id += [n + 1] * (self.num_rows + 1)
         
+        #array that tracks how far it is from the cell to it's root
+        #if a cell is its own root, this value is 0
+        self.sz = [0 for i in range (0, n + 2)]
         
     
     #converts coordinates for rows and columns to a single integer index value
@@ -65,6 +68,7 @@ class Percolation:
             
             for cell in adj_cells:
                 if self.cellExists(cell[0], cell[1]) and self.isOpen(cell[0], cell[1]):
+                    print('union cell {} and {}'.format(cell, (row, col)))
                     self.union(row, col, cell[0], cell[1])
                 
     #returns boolean that indicates whether cell is open
@@ -78,22 +82,28 @@ class Percolation:
     
     #check if two cells are connected
     def isConnected(self, rowp: int, colp: int, rowq:int, colq:int):
-        if self.grid_id[(self.translate(rowp, colp))] == self.grid_id[(self.translate(rowq, colq))]:
-            return True
-        else:
-            return False
-    
-    #something is wrong with union
+        return self.findRoot(self.translate(rowp, colp)) == self.findRoot(self.translate(rowq, colq))
+          
+    #function that determines the length of each tree. this is used to make union
+    #more efficient, because linking shorter trees to the root of the taller tree
+    #reduces the number of traversals necessary
+    #def treeLength(self, row: int, col: int):
+        
     #function that creates union between components, if they are both adjacent
     #and open
     def union(self, rowp: int, colp: int, rowq: int, colq: int):
         if not self.isConnected(rowp, colp, rowq, colq):
-            for i in range(0, len(self.grid_id)):
-                if self.grid_id[i] == self.grid_id[(self.translate(rowp, colp))]:
-                    print(self.grid_id[i], self.grid_id[(self.translate(rowq, colq))])
-                    self.grid_id[i] = self.grid_id[(self.translate(rowq, colq))]    
-                    print(self.grid_id[i], self.grid_id)
-                
+            self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
+            
+            
+    #function that is executed by isConnected to find the root of an object
+    #index should be the index of the cell in the array data structures
+    def findRoot(self, index):
+        if self.grid_id[index] == index:
+            return index
+        else:
+            #continue traversing the tree until the index of the root node is reached
+            return self.findRoot(self.grid_id[index])
     #returns true if the grid percolates
     def percolates(self):
         #check if the virutal cells are connected
@@ -104,10 +114,10 @@ class Percolation:
     
         
 test = Percolation(9)
-
-test.openCell(0, 2)
-test.openCell(1, 2)
-test.openCell(2, 2)
-print(test.grid)
-print(test.grid_id)
+print(test.findRoot(1))
+test.openCell(0, 0)
+test.openCell(1, 0)
+test.openCell(2, 0)
+#print(test.grid)
+#print(test.grid_id)
 print(test.percolates())
