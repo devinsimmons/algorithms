@@ -68,7 +68,7 @@ class Percolation:
             
             for cell in adj_cells:
                 if self.cellExists(cell[0], cell[1]) and self.isOpen(cell[0], cell[1]):
-                    print('union cell {} and {}'.format(cell, (row, col)))
+                    
                     self.union(row, col, cell[0], cell[1])
                 
     #returns boolean that indicates whether cell is open
@@ -111,13 +111,18 @@ class Percolation:
             return True
         else:
             return False
-    
+
+import random
+import time
+start_time = time.time()
+for i in range(0, 10000):
+    test = Percolation(100)
+    for i in range(0, 100000):
+        x = random.randint(0, 9)
+        y = random.randint(0, 9)
         
-test = Percolation(9)
-print(test.findRoot(1))
-test.openCell(0, 0)
-test.openCell(1, 0)
-test.openCell(2, 0)
-#print(test.grid)
-#print(test.grid_id)
-print(test.percolates())
+        test.openCell(x, y)
+        if test.percolates():
+            break
+    
+print(time.time() - start_time)
