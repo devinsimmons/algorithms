@@ -29,7 +29,7 @@ class Percolation:
         self.grid_id += [n + 1] * (self.num_rows + 1)
         
         #array that tracks how long each tree rooted at the index is 
-        self.sz = [0 for i in range (0, n + 2)]
+        self.sz = [1 for i in range (0, n + 2)]
         
     
     #converts coordinates for rows and columns to a single integer index value
@@ -88,16 +88,18 @@ class Percolation:
     #reduces the number of traversals necessary
     #function is called each time a root is found. result is used to do a weighted
     #union (more shallow tree is attached to the root of the deeper tree)
-    #currently treeSize has a recursion error
+    #currently treeSize is making the algorithm 10 times slower
+    #i need to fix tree size and find a more efficient way of calculating it
     def treeSize(self, index):
-        #find the indices of the root node's direct children
-        children = [i for i in range(0, len(self.grid_id)) if self.grid_id[i] == index
-                    and i != index]
-        if len(children) > 0: 
-            for i in children:
-                return len(children) + self.treeSize(i)
-        else:
-            return len(children)
+        return self.sz[self.findRoot[index]]
+#        #find the indices of the root node's direct children
+#        children = [i for i in range(0, len(self.grid_id)) if self.grid_id[i] == index
+#                    and i != index]
+#        if len(children) > 0: 
+#            for i in children:
+#                return len(children) + self.treeSize(i)
+#        else:
+#            return len(children)
         
     #function that creates union between components, if they are both adjacent
     #and open
