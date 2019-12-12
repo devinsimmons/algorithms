@@ -28,8 +28,7 @@ class Percolation:
         self.grid_id += [i for i in range(self.num_rows + 1, (n + 1) - self.num_rows)]
         self.grid_id += [n + 1] * (self.num_rows + 1)
         
-        #array that tracks how far it is from the cell to it's root
-        #if a cell is its own root, this value is 0
+        #array that tracks how long each tree rooted at the index is 
         self.sz = [0 for i in range (0, n + 2)]
         
     
@@ -68,7 +67,7 @@ class Percolation:
             
             for cell in adj_cells:
                 if self.cellExists(cell[0], cell[1]) and self.isOpen(cell[0], cell[1]):
-                    print('union cell {} and {}'.format(cell, (row, col)))
+                    
                     self.union(row, col, cell[0], cell[1])
                 
     #returns boolean that indicates whether cell is open
@@ -87,19 +86,37 @@ class Percolation:
     #function that determines the length of each tree. this is used to make union
     #more efficient, because linking shorter trees to the root of the taller tree
     #reduces the number of traversals necessary
-    #def treeLength(self, row: int, col: int):
+    #function is called each time a root is found. result is used to do a weighted
+    #union (more shallow tree is attached to the root of the deeper tree)
+    #currently treeSize has a recursion error
+    def treeSize(self, index):
+        #find the indices of the root node's direct children
+        children = [i for i in range(0, len(self.grid_id)) if self.grid_id[i] == index
+                    and i != index]
+        if len(children) > 0: 
+            for i in children:
+                return len(children) + self.treeSize(i)
+        else:
+            return len(children)
         
     #function that creates union between components, if they are both adjacent
     #and open
+    #i need to work on path compression
     def union(self, rowp: int, colp: int, rowq: int, colq: int):
         if not self.isConnected(rowp, colp, rowq, colq):
-            self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
-            
-            
+            #performs path compression
+            if self.treeSize(self.translate(rowp, colp)) > self.treeSize(self.translate(rowq, colq)):
+                self.grid_id[self.findRoot(self.translate(rowq, colq))] = self.findRoot(self.translate(rowp, colp))
+            else:
+                self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
+                
+                
     #function that is executed by isConnected to find the root of an object
     #index should be the index of the cell in the array data structures
     def findRoot(self, index):
         if self.grid_id[index] == index:
+            #update the size of the root
+            self.sz[index] = self.treeSize(index)
             return index
         else:
             #continue traversing the tree until the index of the root node is reached
@@ -107,17 +124,33 @@ class Percolation:
     #returns true if the grid percolates
     def percolates(self):
         #check if the virutal cells are connected
-        if self.isConnected(-1, -1, self.num_rows, self.num_rows):
-            return True
-        else:
-            return False
+        return self.isConnected(-1, -1, self.num_rows, self.num_rows)
+          
+
+import random
+import time
+
+#
+#test = Percolation(9)
+#test.openCell(0, 1)
+#test.openCell(1, 1)
+#print(test.treeSize(0))
+#
+def testPercolation(n):
+    test = Percolation(n)
     
-        
-test = Percolation(9)
-print(test.findRoot(1))
-test.openCell(0, 0)
-test.openCell(1, 0)
-test.openCell(2, 0)
-#print(test.grid)
-#print(test.grid_id)
-print(test.percolates())
+    for i in range(0, n * 10):
+        x = random.randint(0, (n**0.5) - 1)
+        y = random.randint(0, (n**0.5) - 1)
+        test.openCell(x, y)
+        if test.percolates():
+            return(test.numberOfOpenCells())
+
+
+result = 0
+start_time = time.time()
+for i in range(0, 1000):
+    result += testPercolation(100)
+print(time.time() - start_time)    
+print(result/1000)
+
