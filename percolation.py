@@ -130,12 +130,6 @@ class Percolation:
 import random
 import time
 
-#
-#test = Percolation(9)
-#test.openCell(0, 1)
-#test.openCell(1, 1)
-#print(test.treeSize(0))
-#
 def testPercolation(n):
     test = Percolation(n)
     
@@ -149,8 +143,8 @@ def testPercolation(n):
 
 result = 0
 start_time = time.time()
-for i in range(0, 1000):
+for i in range(0, 100):
     result += testPercolation(100)
 print(time.time() - start_time)    
-print(result/1000)
+print(result/100)
 
