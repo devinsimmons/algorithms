@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 #implementation of percolation algorithm
  
 class Percolation:
@@ -133,6 +135,9 @@ class Percolation:
         #check if the virutal cells are connected
 
         return self.isConnected(-1, -1, self.num_rows, self.num_rows)
+    
+    def visualizePerc(self, row, col):
+        plt.plot()        
 
 import random
 import time
