@@ -28,8 +28,7 @@ class Percolation:
         self.grid_id += [i for i in range(self.num_rows + 1, (n + 1) - self.num_rows)]
         self.grid_id += [n + 1] * (self.num_rows + 1)
         
-        #array that tracks how far it is from the cell to it's root
-        #if a cell is its own root, this value is 0
+        #array that tracks how long each tree rooted at the index is 
         self.sz = [0 for i in range (0, n + 2)]
         
     
@@ -87,42 +86,70 @@ class Percolation:
     #function that determines the length of each tree. this is used to make union
     #more efficient, because linking shorter trees to the root of the taller tree
     #reduces the number of traversals necessary
-    #def treeLength(self, row: int, col: int):
+    #function is called each time a root is found. result is used to do a weighted
+    #union (more shallow tree is attached to the root of the deeper tree)
+    #currently treeSize is making the algorithm 10 times slower
+    #i need to fix tree size and find a more efficient way of calculating it
+    def treeSize(self, index):
+        #return self.sz[self.findRoot[index]]
+        #find the indices of the root node's direct children
+        children = [i for i in range(0, len(self.grid_id)) if self.grid_id[i] == index
+                    and i != index]
+        if len(children) > 0: 
+            for i in children:
+                return len(children) + self.treeSize(i)
+        else:
+            return len(children)
         
     #function that creates union between components, if they are both adjacent
     #and open
+    #i need to work on path compression
     def union(self, rowp: int, colp: int, rowq: int, colq: int):
         if not self.isConnected(rowp, colp, rowq, colq):
-            self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
-            
-            
+            #performs path compression
+            if self.treeSize(self.translate(rowp, colp)) > self.treeSize(self.translate(rowq, colq)):
+                self.grid_id[self.findRoot(self.translate(rowq, colq))] = self.findRoot(self.translate(rowp, colp))
+            else:
+                self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
+                
+                
     #function that is executed by isConnected to find the root of an object
     #index should be the index of the cell in the array data structures
     def findRoot(self, index):
         if self.grid_id[index] == index:
+            #update the size of the root
+            self.sz[index] = self.treeSize(index)
             return index
         else:
             #continue traversing the tree until the index of the root node is reached
-            return self.findRoot(self.grid_id[index])
+            #each node that is touched has its index changed to match the root node
+            #this line is all I needed to do path compression
+            self.grid_id[index] = self.findRoot(self.grid_id[index])
+            
+            return self.grid_id[index]
+            
     #returns true if the grid percolates
     def percolates(self):
         #check if the virutal cells are connected
-        if self.isConnected(-1, -1, self.num_rows, self.num_rows):
-            return True
-        else:
-            return False
+
+        return self.isConnected(-1, -1, self.num_rows, self.num_rows)
 
 import random
 import time
-start_time = time.time()
-for i in range(0, 10000):
-    test = Percolation(100)
-    for i in range(0, 100000):
-        x = random.randint(0, 9)
-        y = random.randint(0, 9)
-        
+
+def testPercolation(n):
+    test = Percolation(n)
+    
+    for i in range(0, n * 10):
+        x = random.randint(0, (n**0.5) - 1)
+        y = random.randint(0, (n**0.5) - 1)
         test.openCell(x, y)
         if test.percolates():
+            return(test.numberOfOpenCells())
             break
-    
+
+
+
+start_time = time.time()
+testPercolation(100)
 print(time.time() - start_time)
