@@ -122,7 +122,12 @@ class Percolation:
             return index
         else:
             #continue traversing the tree until the index of the root node is reached
-            return self.findRoot(self.grid_id[index])
+            #each node that is touched has its index changed to match the root node
+            #this line is all I needed to do path compression
+            self.grid_id[index] = self.findRoot(self.grid_id[index])
+            
+            return self.grid_id[index]
+            
     #returns true if the grid percolates
     def percolates(self):
         #check if the virutal cells are connected
@@ -141,12 +146,26 @@ def testPercolation(n):
         test.openCell(x, y)
         if test.percolates():
             return(test.numberOfOpenCells())
+            break
 
 
 result = 0
+
 start_time = time.time()
-for i in range(0, 10):
-    result += testPercolation(400)
-print(time.time() - start_time)    
-print(result/100)
+testPercolation(100)
+print(time.time() - start_time)
+# for i in range(0, 1000):
+    
+#     testPercolation(25)
+# time_100 = time.time() - start_time
+
+# start_time = time.time()
+# for i in range(0, 1000):
+
+#     testPercolation(36)
+# time_900 = time.time() - start_time
+    
+# result += (time_900/time_100)
+# print(result)
+
 
