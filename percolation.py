@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
-import numpy as np
+from shapely import geometry
+import geopandas as gpd
+from matplotlib.colors import ListedColormap
 #implementation of percolation algorithm
  
 class Percolation:
@@ -61,6 +61,7 @@ class Percolation:
         
     #opens a cell if it is not already open
     def openCell(self, row: int, col: int):
+        
         if not self.isOpen(row, col):
             #opens the cell
             self.grid[self.translate(row, col)] = 1
@@ -73,6 +74,7 @@ class Percolation:
                 if self.cellExists(cell[0], cell[1]) and self.isOpen(cell[0], cell[1]):
                     
                     self.union(row, col, cell[0], cell[1])
+            
                 
     #returns boolean that indicates whether cell is open
     def isOpen(self, row: int, col: int):
@@ -92,8 +94,6 @@ class Percolation:
     #reduces the number of traversals necessary
     #function is called each time a root is found. result is used to do a weighted
     #union (more shallow tree is attached to the root of the deeper tree)
-    #currently treeSize is making the algorithm 10 times slower
-    #i need to fix tree size and find a more efficient way of calculating it
     def treeSize(self, index):
         #return self.sz[self.findRoot[index]]
         #find the indices of the root node's direct children
@@ -135,7 +135,7 @@ class Percolation:
     #returns true if the grid percolates
     def percolates(self):
         #check if the virutal cells are connected
-
+        self.visualizePerc()
         return self.isConnected(-1, -1, self.num_rows, self.num_rows)
     
     #gets the row and col of a cell using its index. this is mainly just used
@@ -162,20 +162,34 @@ class Percolation:
         return row, col
     
     def visualizePerc(self):
+        polys = []
+        #0 for closed, 1 for open and not connected to top node, 2 for open and
+        #connected to top node
+        open_status = []
+
+        
         for i in range(1, len(self.grid) - 1):
             row, col = self.reverseTranslate(i)
             
-            poly = [np.array([[col - .45, row - .45], [col - .45, row + .45],
-                             [col + .45, row - .45], [col - .45, row -.45]])]
-            poly = PatchCollection(poly)
+            poly = geometry.Polygon([[col - .48, row - .48], [col - .48, row + .48],
+                             [col + .48, row +  .48], [col + .48, row -.48]])
             
-            if self.grid[i] == 0:
-                plt.add_collection(poly)
-                #plt.plot(Polygon(poly), color = 'black')
-                
+            polys.append(poly)
+            
+            if self.isConnected(row, col, self.num_rows, self.num_rows) and self.isOpen(row, col):
+                open_status.append(2)
             else:
-                plt.plot(Polygon(poly), color = 'blue')
-        plt.ylim(-1, 5)
+                open_status.append(self.grid[i])
+            
+        gdf = gpd.GeoDataFrame({'OPEN': open_status}, geometry = polys)
+        
+        color_dict = {0: 'black', 1: 'white', 2: 'blue'}
+        
+        cmap = ListedColormap([color_dict[i] for i in color_dict if i in gdf['OPEN'].tolist()], 
+                               name='custom')
+        #print(gdf)
+        gdf.plot(column = 'OPEN', cmap = cmap, edgecolor = 'black')
+        plt.ylim(-.52, self.num_rows - .48)
         plt.show()
 import random
 import time
@@ -194,9 +208,7 @@ def testPercolation(n):
 
 
 start_time = time.time()
-testPercolation(25)
+testPercolation(16)
 print(time.time() - start_time)
-test = Percolation(25)
-for i in range(1, len(test.grid) - 2):
-    print(test.reverseTranslate(i))
+
 
