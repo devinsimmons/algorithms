@@ -115,7 +115,9 @@ class Percolation:
                 self.grid_id[self.findRoot(self.translate(rowq, colq))] = self.findRoot(self.translate(rowp, colp))
             else:
                 self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
-            
+            if self.isConnected(rowp, colp, self.num_rows, self.num_rows):
+                #I need to figure out how to only visualize after the fourth union call is performed
+                self.visualizePerc()
                 
     #function that is executed by isConnected to find the root of an object
     #index should be the index of the cell in the array data structures
@@ -135,7 +137,7 @@ class Percolation:
     #returns true if the grid percolates
     def percolates(self):
         #check if the virutal cells are connected
-        self.visualizePerc()
+
         return self.isConnected(-1, -1, self.num_rows, self.num_rows)
     
     #gets the row and col of a cell using its index. this is mainly just used
@@ -208,7 +210,7 @@ def testPercolation(n):
 
 
 start_time = time.time()
-testPercolation(16)
+testPercolation(49)
 print(time.time() - start_time)
 
 
