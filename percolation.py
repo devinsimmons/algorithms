@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
-
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
+import numpy as np
 #implementation of percolation algorithm
  
 class Percolation:
@@ -62,7 +64,7 @@ class Percolation:
         if not self.isOpen(row, col):
             #opens the cell
             self.grid[self.translate(row, col)] = 1
-            
+            self.visualizePerc()
             #check if adjacent cells are connected. if not, perform a union
             adj_cells = [(row + 1, col), (row, col + 1),
                          (row - 1, col), (row, col - 1)]
@@ -113,7 +115,7 @@ class Percolation:
                 self.grid_id[self.findRoot(self.translate(rowq, colq))] = self.findRoot(self.translate(rowp, colp))
             else:
                 self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
-                
+            
                 
     #function that is executed by isConnected to find the root of an object
     #index should be the index of the cell in the array data structures
@@ -136,9 +138,45 @@ class Percolation:
 
         return self.isConnected(-1, -1, self.num_rows, self.num_rows)
     
-    def visualizePerc(self, row, col):
-        plt.plot()        
+    #gets the row and col of a cell using its index. this is mainly just used
+    #by the visualizer
+    def reverseTranslate(self, index):
+        
+        if index <= self.num_rows:
+            row = 0
+            col = index - 1
+            
+        elif index > (self.num_rows * (self.num_rows - 1)):
+            row = self.num_rows - 1
+            col = index - 1 - row*self.num_rows
+        else:
+            if index % self.num_rows == 0:
+                
+                row = index // self.num_rows - 1
+            else:
+                row = index // self.num_rows
 
+            col = index - 1 - row*self.num_rows
+            
+        
+        return row, col
+    
+    def visualizePerc(self):
+        for i in range(1, len(self.grid) - 1):
+            row, col = self.reverseTranslate(i)
+            
+            poly = [np.array([[col - .45, row - .45], [col - .45, row + .45],
+                             [col + .45, row - .45], [col - .45, row -.45]])]
+            poly = PatchCollection(poly)
+            
+            if self.grid[i] == 0:
+                plt.add_collection(poly)
+                #plt.plot(Polygon(poly), color = 'black')
+                
+            else:
+                plt.plot(Polygon(poly), color = 'blue')
+        plt.ylim(-1, 5)
+        plt.show()
 import random
 import time
 
@@ -156,5 +194,9 @@ def testPercolation(n):
 
 
 start_time = time.time()
-testPercolation(100)
+testPercolation(25)
 print(time.time() - start_time)
+test = Percolation(25)
+for i in range(1, len(test.grid) - 2):
+    print(test.reverseTranslate(i))
+
