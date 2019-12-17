@@ -8,7 +8,12 @@ class Percolation:
     
     #n represents the number of cells that will be in the grid. n must be
     #a perfect square
-    def __init__(self, n: int):
+    #visualize keyword removes one of the virutal points for the purpose of visualization
+    #it makes the algorithm more complex by a factor of (n**0.5)/2
+    def __init__(self, n: int, visualize = False):
+        self.visualize = visualize
+        if self.visualize:
+            self.viz_counter = 0
         self.n = n
         
         try:
@@ -29,6 +34,8 @@ class Percolation:
         #value given is the index of the parent cell
         #setting parents for top and bottom rows equal to the virtual cells
         self.grid_id = [0] * (self.num_rows + 1)
+        if self.visualize:
+            self.grid_id = [0] + [i for i in range(1, self.num_rows + 1)]
         self.grid_id += [i for i in range(self.num_rows + 1, (n + 1) - self.num_rows)]
         self.grid_id += [n + 1] * (self.num_rows + 1)
         
@@ -65,7 +72,9 @@ class Percolation:
         if not self.isOpen(row, col):
             #opens the cell
             self.grid[self.translate(row, col)] = 1
-            self.visualizePerc()
+            
+            if self.visualize:
+                self.visualizePerc()
             #check if adjacent cells are connected. if not, perform a union
             adj_cells = [(row + 1, col), (row, col + 1),
                          (row - 1, col), (row, col - 1)]
@@ -115,7 +124,7 @@ class Percolation:
                 self.grid_id[self.findRoot(self.translate(rowq, colq))] = self.findRoot(self.translate(rowp, colp))
             else:
                 self.grid_id[self.findRoot(self.translate(rowp, colp))] = self.findRoot(self.translate(rowq, colq))
-            if self.isConnected(rowp, colp, self.num_rows, self.num_rows):
+            if self.isConnected(rowp, colp, self.num_rows, self.num_rows) and self.visualize:
                 #I need to figure out how to only visualize after the fourth union call is performed
                 self.visualizePerc()
                 
@@ -136,8 +145,14 @@ class Percolation:
             
     #returns true if the grid percolates
     def percolates(self):
+        if self.visualize:
+            
+            for i in range (0, self.num_rows):
+                if self.isConnected(0, i, self.num_rows, self.num_rows):
+                    return True
+            return False
+        
         #check if the virutal cells are connected
-
         return self.isConnected(-1, -1, self.num_rows, self.num_rows)
     
     #gets the row and col of a cell using its index. this is mainly just used
@@ -164,6 +179,7 @@ class Percolation:
         return row, col
     
     def visualizePerc(self):
+        self.viz_counter += 1
         polys = []
         #0 for closed, 1 for open and not connected to top node, 2 for open and
         #connected to top node
@@ -173,33 +189,38 @@ class Percolation:
         for i in range(1, len(self.grid) - 1):
             row, col = self.reverseTranslate(i)
             
-            poly = geometry.Polygon([[col - .48, row - .48], [col - .48, row + .48],
-                             [col + .48, row +  .48], [col + .48, row -.48]])
+            poly = geometry.Polygon([[col - .5, row - .5], [col - .5, row + .5],
+                             [col + .5, row + .5], [col + .5, row -.5]])
             
             polys.append(poly)
             
             if self.isConnected(row, col, self.num_rows, self.num_rows) and self.isOpen(row, col):
+                
                 open_status.append(2)
             else:
                 open_status.append(self.grid[i])
             
         gdf = gpd.GeoDataFrame({'OPEN': open_status}, geometry = polys)
         
-        color_dict = {0: 'black', 1: 'white', 2: 'blue'}
+        color_dict = {0: '#969696', 1: 'white', 2: '#2171b5'}
         
         cmap = ListedColormap([color_dict[i] for i in color_dict if i in gdf['OPEN'].tolist()], 
                                name='custom')
         #print(gdf)
         gdf.plot(column = 'OPEN', cmap = cmap, edgecolor = 'black')
         plt.ylim(-.52, self.num_rows - .48)
+        plt.axis('off')
+        plt.savefig(r'C:\Users\Devin Simmons\Desktop\coursera\algorithms\percolation_gif\{}.png'.format(self.viz_counter),
+                    bbox_inches = 'tight', dpi = 250)
         plt.show()
 import random
 import time
 
 def testPercolation(n):
-    test = Percolation(n)
+    test = Percolation(n, visualize = True)
     
     for i in range(0, n * 10):
+
         x = random.randint(0, (n**0.5) - 1)
         y = random.randint(0, (n**0.5) - 1)
         test.openCell(x, y)
@@ -210,7 +231,7 @@ def testPercolation(n):
 
 
 start_time = time.time()
-testPercolation(49)
+testPercolation(225)
 print(time.time() - start_time)
 
 
