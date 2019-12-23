@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Dec 22 18:00:42 2019
-
-@author: Devin Simmons
-"""
+import sys
 
 #class for each node of the linked list the the deque is built on
 class Node:
@@ -20,13 +15,12 @@ class Deque:
     #start off with empty start node
     def __init__(self, data = None):
         self.start = Node(data)
-        
         #store items in a list that allows client to see the contents of the deque
         if data:
             self.content = [data]
         else:
             self.content = []
-        
+    
     #function that returns the last item in the deque. works in linear time
     def lastNode(self, node = None):
         
@@ -90,11 +84,3 @@ class Deque:
         else:
             self.content = self.content[:-1]
             return True
-        
-test = Deque(1)
-test.pushFront(2)
-test.pushEnd(3)
-test.pushFront(4)
-test.popFront()
-test.popFront()
-print(test.content)
