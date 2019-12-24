@@ -72,7 +72,6 @@ class Deque:
             self.end.next_nd = None
     
     def contents(self, node = None):
-        
         if not node:
             node = self.start
         
@@ -80,4 +79,4 @@ class Deque:
             return [node.data] + self.contents(node.next_nd)
         else:
             return [node.data]
-        
+
