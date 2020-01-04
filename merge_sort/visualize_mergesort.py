@@ -1,3 +1,4 @@
+import operator
 #mergesort can work on lists of number values (integers or floats)
 #it sorts from least value to greatest value
 class MergeSort:
@@ -5,12 +6,16 @@ class MergeSort:
     def __init__(self, arr: list):
         self.arr = arr
     
+    #determines order of sorting
     def sort(self, how = 'low_to_high'):
         if how == 'low_to_high':
-            return MergeSort.order(self.arr)
-    
-    @staticmethod
-    def order(arr):
+            return self.order(self.arr)
+        elif how == 'high_to_low':
+            sort_obj = HighToLow(self.arr)
+            return sort_obj.order(sort_obj.arr)
+            
+    #function that recursively calls the merge function on subarrays
+    def order(self, arr):
         mid = len(arr) //2 + 1
         #array of length 1
         if mid < 2:
@@ -19,16 +24,15 @@ class MergeSort:
         
         #arrs length 2
         elif len(arr) == 2:
-            return MergeSort.merge([arr[0]], [arr[1]])
+            return self.merge([arr[0]], [arr[1]])
         else:
-            arr1 = MergeSort.order(arr[0:mid])
-            arr2 = MergeSort.order(arr[mid:])
-            return MergeSort.merge(arr1, arr2)            
+            arr1 = self.order(arr[0:mid])
+            arr2 = self.order(arr[mid:])
+            return self.merge(arr1, arr2)            
     
 
     #merges two sorted arrays
-    @staticmethod
-    def merge(arr1, arr2):
+    def merge(self, arr1, arr2, op = operator.lt):
         #faster to start with empty list than a list of length n
         new_arr = []
         #index of the first arr  
@@ -39,8 +43,8 @@ class MergeSort:
         #do quick merge, compare entry from left list to right list, put lower 
         ##value in the new arr
         for x in range(0, (len(arr1) + len(arr2))):
-
-            if arr1[i] < arr2[j]:
+            #essentially says if arr1[i] < arr2[j]
+            if op(arr1[i], arr2[j]):
                 new_arr.append(arr1[i])
 
                 if (i+1) < len(arr1):
@@ -58,3 +62,31 @@ class MergeSort:
                     new_arr += arr1[i:]
                     break
         return new_arr
+    
+
+#class that orders the list from high to low. 
+class HighToLow(MergeSort):
+    
+    #merges two sorted arrays, ordering from high to low
+    #the operator is switched to be >
+    def merge(self, arr1, arr2):
+        return super().merge(arr1, arr2, op = operator.gt)
+        
+#class to visualize mergesort, inherits from mergesort
+class Visualizer(MergeSort):
+    def __init__(self, arr: list, outpath: str):
+        super().__init__(arr)
+        #adding an attribute that is a filepath to the folder where frames of 
+        #the mergesort animation will be added
+        self.outpath = outpath
+
+import random
+import time
+
+
+arr = [random.randrange(0, 100000) for i in range(0, 100000)]
+
+st = time.time()
+test = MergeSort(arr)
+test.sort(how = 'low_to_high')
+print(time.time() - st)
