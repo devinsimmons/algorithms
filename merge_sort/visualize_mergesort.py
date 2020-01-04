@@ -5,7 +5,7 @@ class MergeSort:
     def __init__(self, arr: list):
         self.arr = arr
     
-    def sort1(self, how = 'low_to_high'):
+    def sort(self, how = 'low_to_high'):
         if how == 'low_to_high':
             return MergeSort.order(self.arr)
     
@@ -38,10 +38,11 @@ class MergeSort:
         
         #do quick merge, compare entry from left list to right list, put lower 
         ##value in the new arr
-        for x in range(0, len(new_arr)):
+        for x in range(0, (len(arr1) + len(arr2))):
 
             if arr1[i] < arr2[j]:
                 new_arr.append(arr1[i])
+
                 if (i+1) < len(arr1):
                     i += 1
                     
@@ -57,19 +58,3 @@ class MergeSort:
                     new_arr += arr1[i:]
                     break
         return new_arr
-
-import random
-import time
-lis =[random.randrange(1, 100000000) for i in range(0, 1000000)]
-test = MergeSort(lis)
-
-st = time.time()
-
-test.sort1()
-print(time.time() - st)
-
-st = time.time()
-
-lis.sort()
-print(time.time() - st)
-
