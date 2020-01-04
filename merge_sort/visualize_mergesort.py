@@ -4,18 +4,24 @@ class MergeSort:
     
     def __init__(self, arr: list):
         self.arr = arr
-        self.arr.mergeSort()
     
-    def mergeSort(self):
-        mid = len(self.arr) //2 + 1
+    def sort(self, how = 'low_to_high'):
+        if how == 'low_to_high':
+            return MergeSort.order(self.arr)
+    
+    @staticmethod
+    def order(arr):
+        mid = len(arr) //2 + 1
+        #array of length 1
         if mid < 2:
-            return self.arr
-        
-        
-        arr1 = MergeSort.merge(self.arr[0:mid])
-        arr2 = MergeSort.merge(self.arr[mid:])
-        
-        return MergeSort.merge(arr1, arr2)            
+            return arr
+        #arrs length 2
+        elif len(arr) == 2:
+            return MergeSort.merge([arr[0]], [arr[1]])
+        else:
+            arr1 = MergeSort.order(arr[0:mid])
+            arr2 = MergeSort.order(arr[mid:])
+            return MergeSort.merge(arr1, arr2)            
     
 
     #merges two sorted arrays
@@ -51,5 +57,12 @@ class MergeSort:
                     break
             k += 1
         return new_arr
-    
-print(MergeSort.merge([1, 9, 11], [2, 12, 13]))        
+
+import random
+import time
+lis =[random.randrange(1, 100) for i in range(0, 300000)]
+
+st = time.time()
+test = MergeSort(lis)
+test.sort()
+print(time.time() - st)
