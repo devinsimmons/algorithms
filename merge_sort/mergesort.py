@@ -1,4 +1,5 @@
 import operator
+import matplotlib.pyplot as plt
 #mergesort can work on lists of number values (integers or floats)
 #it sorts from least value to greatest value
 class MergeSort:
@@ -46,7 +47,6 @@ class MergeSort:
             #essentially says if arr1[i] < arr2[j]
             if op(arr1[i], arr2[j]):
                 new_arr.append(arr1[i])
-
                 if (i+1) < len(arr1):
                     i += 1
                     
@@ -70,23 +70,18 @@ class HighToLow(MergeSort):
     #merges two sorted arrays, ordering from high to low
     #the operator is switched to be >
     def merge(self, arr1, arr2):
+        #changes the default arg for op
         return super().merge(arr1, arr2, op = operator.gt)
-        
-#class to visualize mergesort, inherits from mergesort
-class Visualizer(MergeSort):
-    def __init__(self, arr: list, outpath: str):
-        super().__init__(arr)
-        #adding an attribute that is a filepath to the folder where frames of 
-        #the mergesort animation will be added
-        self.outpath = outpath
 
-import random
-import time
-
-
-arr = [random.randrange(0, 100000) for i in range(0, 100000)]
-
-st = time.time()
-test = MergeSort(arr)
-test.sort(how = 'low_to_high')
-print(time.time() - st)
+#point class    
+class Point:
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    #point should be an instance of the point class
+    def calcSlope(self, point):
+        return (self.y - point.y)/(self.x - point.x)
+    
+    

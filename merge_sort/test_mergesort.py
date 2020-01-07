@@ -1,6 +1,6 @@
 #file to test the mergesort
 import unittest
-import visualize_mergesort as vm
+import mergesort as vm
 import random
 
 class TestMergesort(unittest.TestCase):
