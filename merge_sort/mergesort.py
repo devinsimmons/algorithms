@@ -203,9 +203,13 @@ def visualizer(num_pts, outpath, max_coord = 30):
         for i in lines:
             plt.plot([x[0] for x in i.pts], [y[1] for y in i.pts], color = 'green')
             plt.scatter([x[0] for x in i.pts], [y[1] for y in i.pts], color = 'green')
+            
         
 #        plt.xlim(max_coord)
 #        plt.ylim(max_coord)
         plt.show()
+    for i in lines:
+        if len(i.pts) < 4:
+            print(len(i.pts))
 visualizer(45, None)
         
