@@ -1,4 +1,4 @@
-import operator
+import random
 import matplotlib.pyplot as plt
 #mergesort can work on lists of number values (integers or floats)
 #it sorts from least value to greatest value
@@ -8,7 +8,7 @@ class MergeSort:
         self.arr = arr
     
     #determines order of sorting
-    def sort(self, how = 'low_to_high'):
+    def msort(self, how = 'low_to_high'):
         if how == 'low_to_high':
             return self.order(self.arr)
         elif how == 'high_to_low':
@@ -77,6 +77,15 @@ class HighToLow(MergeSort):
     def comparator(self, obj1, obj2):
         return obj1 > obj2
 
+#class that orders coordinates based on x coord, ties broken based on y coord
+class MergeSortCoords(MergeSort):
+    
+    def comparator(self, obj1, obj2):
+        if obj1[0] == obj2[0]:
+            return obj1[1] > obj2[1]
+        else:
+            return obj1 > obj2
+
 #class that applies mergesort to points, ordering them by the slope they have
 #to another point
 class MergeSortSlopes(MergeSort):
@@ -108,7 +117,7 @@ class Point:
     #point should be an instance of the point class
     def calcSlope(self, point):
         #handle undefined slope
-        if self.y == point.y and self.x != point.x:
+        if self.x == point.x and self.y != point.y:
             return float('inf')
         #handle situation where both points are equal
         elif self.y == point.y and self.x == point.x:
@@ -116,14 +125,87 @@ class Point:
         #normal slope equation
         return (self.y - point.y)/(self.x - point.x)
     
-points = [(10, 9), (9, 8), (8, 7), (1, 1)]
-
-for i in points:
-    pt = Point(i)
-    pts = MergeSortSlopes(points, pt).sort()
+#contstructing the line segments. in this case, a line segment requires at least
+#3 collinear points
+#points should just be normal tuples
+class LineSegment:
+    def __init__(self, pt1, pt2, pt3, pt4):
+        self.pts = [pt1, pt2, pt3, pt4]
+        self.slope = Point(pt1).calcSlope(Point(pt2))
+        
+    def addPoint(self, pt):
+        self.pts.append(pt)
+        
     
-    for x in range(0, len(pts)):
-        if x != (len(pts) - 1):
-            if pt.calcSlope(Point(pts[x])) == pt.calcSlope(Point(pts[x+1])):
-                print(pts[x], pts[x+1])        
-                   
+    
+
+
+#function that detects, and returns, any line segments with more than 3 points
+#when passed a list of tuples 
+def detectLines(pts):
+    #store line segment objects that are generated
+    lines = []
+    
+    for i in pts:
+        line = None 
+        pt = Point(i)
+        #sort the points based on their slopes
+        pts = MergeSortSlopes(pts, pt).msort()
+        
+        
+        for x in range(2, len(pts)):
+            #skip duplicate points
+            if pts[x] == i:
+                pass
+            #check if the point matches the current line being constructed, if 
+            #one exists
+            elif line:
+                if pt.calcSlope(Point(pts[x])) == line.slope:
+                    line.addPoint(pts[x])
+                #reset line if slope doesn't match
+                else:
+                    if compareLineSlopes(lines, line):
+                        lines.append(line)
+                    line = None
+            #if the slope of two consecuitve points are equal, a line segment exists
+            #and is initiated
+            else:
+                
+                if pt.calcSlope(Point(pts[x])) ==  pt.calcSlope(Point(pts[x - 1])) \
+                and pt.calcSlope(Point(pts[x])) ==  pt.calcSlope(Point(pts[x - 2])):
+                    line = LineSegment(i, pts[x-1], pts[x-2], pts[x])
+
+                if x == len(pts) - 1 and line:
+                    if compareLineSlopes(lines, line):
+                        lines.append(line)
+    return lines
+
+#function that makes sure that repeat lines are not being added
+#returns true if the slope of the new line is not in the list of lines
+def compareLineSlopes(lines, targetLine):
+    for line in lines:
+        if line.slope == targetLine.slope:
+            return False
+    #puts the points in correct drawing order
+    targetLine.pts = MergeSortCoords(targetLine.pts).msort()
+    return True
+    
+
+#creating a matplotlib visualizer that inputs random coordinates, draws a new 
+#frame each time a point is added, and then draws lines as they appear
+def visualizer(num_pts, outpath, max_coord = 30):
+    pts = []
+    lines = []
+    for i in range(0, num_pts):
+        pts.append((random.randint(0, max_coord), random.randint(0, max_coord)))
+        lines += detectLines(pts)
+        plt.scatter([x[0] for x in pts], [y[1] for y in pts])
+        for i in lines:
+            plt.plot([x[0] for x in i.pts], [y[1] for y in i.pts], color = 'green')
+            plt.scatter([x[0] for x in i.pts], [y[1] for y in i.pts], color = 'green')
+        
+#        plt.xlim(max_coord)
+#        plt.ylim(max_coord)
+        plt.show()
+visualizer(45, None)
+        
