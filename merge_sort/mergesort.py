@@ -84,7 +84,7 @@ class MergeSortCoords(MergeSort):
         if obj1[0] == obj2[0]:
             return obj1[1] > obj2[1]
         else:
-            return obj1 > obj2
+            return obj1[0] > obj2[0]
 
 #class that applies mergesort to points, ordering them by the slope they have
 #to another point
@@ -143,6 +143,8 @@ class LineSegment:
 #function that detects, and returns, any line segments with more than 3 points
 #when passed a list of tuples 
 def detectLines(pts):
+    plt.style.use('seaborn')
+    
     #store line segment objects that are generated
     lines = []
     
@@ -193,23 +195,36 @@ def compareLineSlopes(lines, targetLine):
 
 #creating a matplotlib visualizer that inputs random coordinates, draws a new 
 #frame each time a point is added, and then draws lines as they appear
-def visualizer(num_pts, outpath, max_coord = 30):
+def visualizer(num_pts, outpath, max_coord = 45):
+    
     pts = []
     lines = []
     for i in range(0, num_pts):
-        pts.append((random.randint(0, max_coord), random.randint(0, max_coord)))
-        lines += detectLines(pts)
-        plt.scatter([x[0] for x in pts], [y[1] for y in pts])
-        for i in lines:
-            plt.plot([x[0] for x in i.pts], [y[1] for y in i.pts], color = 'green')
-            plt.scatter([x[0] for x in i.pts], [y[1] for y in i.pts], color = 'green')
+        pt = (random.randint(0, max_coord), random.randint(0, max_coord))
+        #makes sure that points aren't repeated
+        if checkInsertion(pts, pt):
+            pts.append(pt)
             
-        
-#        plt.xlim(max_coord)
-#        plt.ylim(max_coord)
-        plt.show()
-    for i in lines:
-        if len(i.pts) < 4:
-            print(len(i.pts))
-visualizer(45, None)
+            line = detectLines(pts)
+            #makes sure that lines aren't repeated
+            if checkInsertion(lines, line):
+                lines += line
+            plt.scatter([x[0] for x in pts], [y[1] for y in pts], color = '#377eb8')
+            for i in lines:
+                plt.plot([x[0] for x in i.pts], [y[1] for y in i.pts], color = '#4daf4a')
+                plt.scatter([x[0] for x in i.pts], [y[1] for y in i.pts], color = '#4daf4a')
+            
+            plt.ylim([-1, max_coord + 1])
+            plt.xlim([-1, max_coord + 1])
+            plt.show()
+
+
+#checks if an object already exists in the list. if not, returns true
+def checkInsertion(arr, obj):
+    if obj in arr:
+        return False
+    else:
+        return True
+    
+#visualizer(45, None)
         
