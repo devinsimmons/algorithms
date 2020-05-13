@@ -62,9 +62,12 @@ class Graph:
         while tgt_node.next:
             
             neighbor = tgt_node.next
-            new_distance = neighbor.cost + self.df[self.df['gid'] == tgt_node.gid]['distance']
+            new_distance = neighbor.cost + self.df[self.df['gid'] == tgt_node.gid]['distance'].values[0]
+            print(new_distance)
             #filter for values that are unvisited, equal the gid we want, and have a higher distance than the new distance
-            print(self.df[self.df[self.df[self.df['unvisited'] == True]['gid'] == neighbor.gid]['distance'] > new_distance])
+            df_gid = self.df['gid'] == neighbor.gid
+            df_visit = df_gid['visited'] == True
+            df_dist = df_gid['distance'] > new_distance
             
             #this part needs some work. time for bed
             if (self.df[self.df['gid'] == neighbor.gid]['unvisited'] == True\
