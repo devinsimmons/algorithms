@@ -35,7 +35,7 @@ class Graph:
     def dijkstra(self, node1: int, node2: int):
         #i am storing data on the nodes in a variety of dictionaries. the key is 
         #the node gid and the value is the relevant value (distance, visited, prev_node)
-        self.visited = {i.gid: False for i in self.nodes}
+        self.unvisited = {i.gid for i in self.nodes}
         self.distance = {i.gid: float('inf') for i in self.nodes}
         self.prev_node = {i.gid: i.gid for i in self.nodes}
                                            
@@ -47,33 +47,31 @@ class Graph:
         node2 = self.nodes[node2 - 1]
         
         self.counter = 0
-        self.visitNeighbors(node1)
+        print('ready')
+        while len(self.unvisited) > 0:
+            self.visitNeighbors()
+
         
     #iterate through a node's neighbors, determine their distance to the starting node
     #node is a LinkedList object
-    def visitNeighbors(self, node):
-        self.counter += 1
-        if self.counter % 100 == 0:
-            print(self.counter)
+    def visitNeighbors(self):
+        node = self.nodes[min(self.unvisited, key = lambda node: self.distance[node]) - 1]
         tgt_node = node
+        
         while tgt_node.next:
             
             neighbor = tgt_node.next
             new_distance = neighbor.cost + self.distance[tgt_node.gid]
             
-            if not self.visited[neighbor.gid] and self.distance[neighbor.gid] > new_distance:
+            if neighbor.gid in self.unvisited and self.distance[neighbor.gid] > new_distance:
                 self.distance[neighbor.gid] = new_distance
                 self.prev_node[neighbor.gid] = tgt_node.gid
             #move on to the next neighbor
             tgt_node = neighbor
         #node has been visited
-        self.visited[node.gid] = True
-        visited_nodes = {k: self.distance[k] for k,v in self.visited.items() if v is False}
-        #this returns the node closest to the start node that has not been visited yet
-        if len(visited_nodes) > 0:
-            self.visitNeighbors(self.nodes[min(visited_nodes, key = visited_nodes.get) - 1])
-        
-        
+        self.unvisited.remove(node.gid)
+        print(node.gid)
+
 
     
 #this class is used to build a linked list for each node in the graph
