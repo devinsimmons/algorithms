@@ -1,5 +1,6 @@
 import fiona
 import os
+import geopandas as gpd
 
 os.chdir(r'C:\Users\14108\Desktop\algorithms\routing_project\data')
 
@@ -35,41 +36,47 @@ class Graph:
     def dijkstra(self, node1: int, node2: int):
         #i am storing data on the nodes in a variety of dictionaries. the key is 
         #the node gid and the value is the relevant value (distance, visited, prev_node)
-        self.unvisited = {i.gid for i in self.nodes}
-        self.distance = {i.gid: float('inf') for i in self.nodes}
-        self.prev_node = {i.gid: i.gid for i in self.nodes}
-                                           
+        
+        self.df = gpd.GeoDataFrame({'gid': [i.gid for i in self.nodes], 
+                                 'distance': [float('inf') for i in self.nodes],
+                                 'prev_node': [i.gid for i in self.nodes],
+                                 'unvisited': [True for i in self.nodes]})
         #distance from node1 to node1 is 0
-        self.distance[node1] = 0
+        self.df.loc[self.df['gid'] == node1, ['distance']] = 0
         
         #getting the actual objects that represent the nodes
         node1 = self.nodes[node1 - 1]
         node2 = self.nodes[node2 - 1]
         
         self.counter = 0
-        print('ready')
-        while len(self.unvisited) > 0:
+        while len(self.df[self.df['unvisited'] == True]) > 0:
             self.visitNeighbors()
 
         
     #iterate through a node's neighbors, determine their distance to the starting node
     #node is a LinkedList object
     def visitNeighbors(self):
-        node = self.nodes[min(self.unvisited, key = lambda node: self.distance[node]) - 1]
+        node = self.nodes[self.df[self.df['unvisited'] == True]['distance'].idxmin()]
         tgt_node = node
         
         while tgt_node.next:
             
             neighbor = tgt_node.next
-            new_distance = neighbor.cost + self.distance[tgt_node.gid]
+            new_distance = neighbor.cost + self.df[self.df['gid'] == tgt_node.gid]['distance']
+            #filter for values that are unvisited, equal the gid we want, and have a higher distance than the new distance
+            print(self.df[self.df[self.df[self.df['unvisited'] == True]['gid'] == neighbor.gid]['distance'] > new_distance])
             
-            if neighbor.gid in self.unvisited and self.distance[neighbor.gid] > new_distance:
-                self.distance[neighbor.gid] = new_distance
-                self.prev_node[neighbor.gid] = tgt_node.gid
+            #this part needs some work. time for bed
+            if (self.df[self.df['gid'] == neighbor.gid]['unvisited'] == True\
+            & self.df[self.df['gid'] == neighbor.gid]['distance']  > new_distance):
+                
+                self.df.loc[self.df.gid == neighbor.gid, ['distance']] = new_distance
+                self.df.loc[self.df.gid == neighbor.gid, ['prev_node']] = tgt_node.gid
+                
             #move on to the next neighbor
             tgt_node = neighbor
         #node has been visited
-        self.unvisited.remove(node.gid)
+        self.df.loc[self.df.gid == node.gid]['unvisited'] = False
         print(node.gid)
 
 
