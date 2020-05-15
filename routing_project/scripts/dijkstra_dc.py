@@ -41,11 +41,12 @@ class Graph:
                                  'distance': [float('inf') for i in self.nodes],
                                  'prev_node': [i.gid for i in self.nodes],
                                  'unvisited': [True for i in self.nodes]})
+        self.df.index += 1
         #distance from node1 to node1 is 0
         self.df.loc[self.df['gid'] == node1, ['distance']] = 0
         
         #getting the actual objects that represent the nodes
-        node1 = self.nodes[node1 - 1]
+        self.node1 = self.nodes[node1 - 1]
         node2 = self.nodes[node2 - 1]
         
         self.counter = 0
@@ -56,30 +57,30 @@ class Graph:
     #iterate through a node's neighbors, determine their distance to the starting node
     #node is a LinkedList object
     def visitNeighbors(self):
-        node = self.nodes[self.df[self.df['unvisited'] == True]['distance'].idxmin()]
+        #find the smallest value in the dataframe 
+        node = self.nodes[self.df[self.df['unvisited'] == True]['distance'].idxmin() - 1]
         tgt_node = node
         
         while tgt_node.next:
             
             neighbor = tgt_node.next
             new_distance = neighbor.cost + self.df[self.df['gid'] == tgt_node.gid]['distance'].values[0]
-            print(new_distance)
+
             #filter for values that are unvisited, equal the gid we want, and have a higher distance than the new distance
-            df_gid = self.df['gid'] == neighbor.gid
-            df_visit = df_gid['visited'] == True
-            df_dist = df_gid['distance'] > new_distance
+            df_gid = self.df[self.df['gid'] == neighbor.gid]
+            df_visit = df_gid[df_gid['unvisited'] == True]
+            df_dist = df_visit[df_visit['distance'] > new_distance]
             
             #this part needs some work. time for bed
-            if (self.df[self.df['gid'] == neighbor.gid]['unvisited'] == True\
-            & self.df[self.df['gid'] == neighbor.gid]['distance']  > new_distance):
+            if len(df_dist) > 0:
                 
-                self.df.loc[self.df.gid == neighbor.gid, ['distance']] = new_distance
-                self.df.loc[self.df.gid == neighbor.gid, ['prev_node']] = tgt_node.gid
+                self.df.loc[neighbor.gid, ['distance']] = new_distance
+                self.df.loc[neighbor.gid, ['prev_node']] = tgt_node.gid
                 
             #move on to the next neighbor
             tgt_node = neighbor
         #node has been visited
-        self.df.loc[self.df.gid == node.gid]['unvisited'] = False
+        self.df.loc[node.gid, ['unvisited']] = False
         print(node.gid)
 
 
