@@ -1,0 +1,45 @@
+#unit tests for the dijkstra.py file I wrote
+import unittest
+import dijkstra as dj
+import os
+
+os.chdir(r'../data')
+
+class TestDijkstra(unittest.TestCase):
+    
+    def setUp(self):
+        #testing out two different kinds of graphs, one based on speed limit + distance
+        #and one based purely on distance
+        self.speed_graph =  dj.Graph('test_data.gpkg', 'dc_roads', 'road_nodes')
+        self.length_graph = dj.Graph('test_data.gpkg', 'dc_roads', 'road_nodes', cost_field = 'km')
+        #generate all the shortest paths to node 60288
+        self.speed_paths = self.speed_graph.dijkstra(60288)
+        self.length_paths = self.length_graph.dijkstra(60288)
+
+        self.testAdjList()
+        self.testAdjListInsert()
+        self.testSpeed()
+        self.testLength()
+    
+    #making sure that a known node has the known number of neighbors,
+    #in this case it's two. if next.next.next is not none, it indicates
+    #that there may be an issue with the way one way streets are interpreted
+    def testAdjList(self):
+        self.assertTrue(self.speed_graph.nodes[60288].next.next.next == None)
+    
+    #test if insert method works correctly    
+    def testAdjListInsert(self):
+        #57987 in the test dataset is known to have one neighbor
+        self.speed_graph.nodes[57987].insert(dj.LinkedList(69))
+        self.assertTrue(self.speed_graph.nodes[57987].next.next.gid == 69)
+    
+    #test that the speed-based traversal correctly determines shortest path
+    def testSpeed(self):
+        self.assertTrue(dj.shortestPath(self.speed_paths, 57833).wkt == 'LINESTRING (-77.0091764 38.9181108, -77.0091764 38.9169964, -77.0091764 38.9169964, -77.0091774 38.9168085, -77.0091774 38.9168085, -77.0100508 38.9165237, -77.01083 38.9162576, -77.01168629999999 38.9159488, -77.01168629999999 38.9159488, -77.01205040000001 38.9158167, -77.01215379999999 38.9157809, -77.01215379999999 38.9157809, -77.0122609 38.9157463, -77.01270220000001 38.9155971, -77.01270220000001 38.9155971, -77.01427529999999 38.9150493, -77.01427529999999 38.9150493, -77.0149029 38.914826, -77.0157385 38.9145421, -77.0157385 38.9145421, -77.01667260000001 38.9142077, -77.0168939 38.9141285, -77.0168939 38.9141285, -77.0170688 38.9142041, -77.0171465 38.9142372, -77.0171465 38.9142372, -77.0180278 38.9146158, -77.0180278 38.9146158, -77.0182942 38.9147303, -77.0182942 38.9147303, -77.0184174 38.9147791, -77.0184174 38.9147791, -77.01841 38.914874, -77.018418 38.914922, -77.0184565 38.9151711, -77.01847100000001 38.915265, -77.01848 38.915331, -77.018553 38.915792)')
+    
+    #test that the length-based traversal correctly determines shortest path
+    def testLength(self):
+        self.assertTrue(dj.shortestPath(self.length_paths, 57833).wkt == 'LINESTRING (-77.0091764 38.9181108, -77.0091764 38.9169964, -77.0091764 38.9169964, -77.0091774 38.9168085, -77.0091774 38.9168085, -77.0100508 38.9165237, -77.01083 38.9162576, -77.01168629999999 38.9159488, -77.01168629999999 38.9159488, -77.01205040000001 38.9158167, -77.01215379999999 38.9157809, -77.01215379999999 38.9157809, -77.0122609 38.9157463, -77.01270220000001 38.9155971, -77.01270220000001 38.9155971, -77.01283909999999 38.9155948, -77.01307300000001 38.915591, -77.01324200000001 38.91559, -77.01343199999999 38.915569, -77.014259 38.915568, -77.01434 38.915569, -77.01434 38.915569, -77.014374 38.915886, -77.014374 38.915886, -77.014478 38.915887, -77.015399 38.915915, -77.015507 38.9159169, -77.015507 38.9159169, -77.0155099 38.9159543, -77.0155242 38.9159936, -77.0155362 38.9160128, -77.01556890000001 38.9160478, -77.0156022 38.9160708, -77.0156404 38.9160884, -77.01568140000001 38.9160998, -77.01571920000001 38.9161048, -77.0157578 38.9161049, -77.0157578 38.9161049, -77.0158003 38.9160991, -77.0158376 38.9160884, -77.0158587 38.9160797, -77.01587840000001 38.9160694, -77.0158966 38.9160575, -77.01591329999999 38.9160442, -77.0159408 38.9160143, -77.0159601 38.9159803, -77.0159671 38.9159592, -77.0159712 38.9159301, -77.0159712 38.9159301, -77.016075 38.915933, -77.016487 38.915941, -77.01680399999999 38.915949, -77.016836 38.915951, -77.016901 38.91595, -77.01693299999999 38.915947, -77.0170336 38.9159393, -77.01725399999999 38.915915, -77.017332 38.915909, -77.017332 38.915909, -77.017839 38.915859, -77.018553 38.915792)')
+        
+if __name__ == '__main__':
+    unittest.main()

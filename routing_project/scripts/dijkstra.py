@@ -9,8 +9,13 @@ os.chdir(r'C:\Users\14108\Desktop\algorithms\routing_project\data')
 class Graph:
     
     #the version I am currently developing requires that the infile is a GPKG
-    #layer_name is the name of the target layer in the GPKG
-    def __init__(self, infile: str, layer_name: str, node_layer: str):
+    #layer_name is the name of the GPKG layer that contains a routable OSM network
+    #node_layer is the name of the GPKG layer that contains the nodes of the network
+    #cost is the name of the field that will be considered as the cost. in the 
+    #osm2po data the code is made for, the 'cost' field is a function of distance 
+    #and speed limit. however, there is also a raw distance field titled 'km' that
+    #contains length in km
+    def __init__(self, infile: str, layer_name: str, node_layer: str, cost_field = 'cost'):
         #get number of nodes so I can start building the adjacency list
         num_nodes = len(fiona.open(infile, layer = node_layer))
         #this dictionary will contain adjacency lists for each node in the network
@@ -26,7 +31,7 @@ class Graph:
             for feature in layer:
                 src = feature['properties']['source']
                 tgt = feature['properties']['target']
-                cost = feature['properties']['cost']
+                cost = feature['properties'][cost_field]
                 geom = shape(feature['geometry'])
                 
                 #adds connection to the adjacency list.
@@ -34,12 +39,11 @@ class Graph:
                 
                 #adds the reverse connection from target to source if it is not
                 #a one way street
-                if feature['properties']['reverse_cost'] == cost:
+                if feature['properties']['reverse_cost'] == feature['properties']['cost']:
                     #reverse the geometry of the linestring, makes it easier
                     #down the line to construct the shortest path
-                    #absolutely bizzare but I can't reverse this geom while referencing
-                    #the original geom. it fucks up the geom value that has already 
-                    #been stored in a linked list. very confused on this
+                    #I can't reverse this geom while referencing
+                    #the original shapely geometry object so it has to be created anew
                     reverse_geom = shape(feature['geometry'])
                     reverse_geom.coords = list(reverse_geom.coords[::-1])
                 
@@ -78,7 +82,7 @@ class Graph:
     #iterate through a node's neighbors, determine their distance to the starting node
     #node is a LinkedList object
     def visitNeighbors(self):
-        #find the smallest value in the dataframe 
+        #find the index of the smallest distance value in the dataframe 
         min_index = self.df[self.df['unvisited'] == True]['distance'].idxmin()
 
         node = self.nodes[self.df.iloc[min_index].gid]
@@ -100,7 +104,6 @@ class Graph:
                 self.df.loc[self.df['gid'] == neighbor.gid, ['prev_node']] = node.gid
                 #setting neighbor geometry equal to geometry from the node to its neighbor 
                 #these will later be concatenated when the shortest path is determined
-                #having trouble here
                 self.df.loc[self.df['gid'] == neighbor.gid, ['geom']] = neighbor.geom
                                 
             #move on to the next neighbor
@@ -148,14 +151,22 @@ def shortestPath(df: Graph.dijkstra, tgt: int):
     path = LineString(coords)
     return path
 
-            #56269
-   
+#this function creates a spatial file that contains all the shortest paths
+#from a starting node (st_node variable) to all the other nodes in the dataset
+def exportShortestPaths(graph: Graph, st_node: int, out_path: str):
+    #generate the paths
+    paths = graph.dijkstra(st_node)
+    gdf = gpd.GeoDataFrame({'gid': [graph.nodes[i].gid for i in paths['gid'].values],
+                      'geom': [shortestPath(paths, graph.nodes[i].gid) for i in paths['gid'].values]}).set_geometry('geom')
+    gdf.to_file(out_path)
     
-   
-graph = Graph('test_data.gpkg', 'dc_roads', 'road_nodes')
-paths = graph.dijkstra(60288)
+# #this generates a graph based on speed limit
+# speed_graph = Graph('test_data.gpkg', 'dc_roads', 'road_nodes', cost_field = 'cost')
+# #this graph is based specificially on length
+# km_graph = Graph('test_data.gpkg', 'dc_roads', 'road_nodes', cost_field = 'km')
 
 
-gdf = gpd.GeoDataFrame({'gid': [graph.nodes[i].gid for i in paths['gid'].values if graph.nodes[i].gid != 292092],
-                        'geom': [shortestPath(paths, graph.nodes[i].gid) for i in paths['gid'].values   if graph.nodes[i].gid != 292092]}).set_geometry('geom')
-gdf.to_file('dijkstra.shp')
+# print(shortestPath(km_graph.dijkstra(60288), 57833).wkt)
+
+# exportShortestPaths(speed_graph, 60288, 'speed_dijkstra.shp')
+# exportShortestPaths(km_graph, 60288, 'length_dijkstra.shp')
